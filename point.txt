@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Penilaian Point Siswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-up {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .notification.success {
+            background-color: #d1fae5;
+            border-left: 4px solid #10b981;
+            color: #065f46;
+        }
+        .notification.error {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
+        }
+        .notification.warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
+        }
+        .notification.info {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body class="h-full bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="min-h-full flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 fade-in">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">Sistem Penilaian Point</h2>
+                <p class="text-gray-600 mt-2">Masuk ke akun Anda</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+                    <input type="text" id="username" name="username" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input type="password" id="password" name="password" required 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role</label>
+                    <select id="role" name="role" required 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Pilih Role</option>
+                        <option value="super_admin">Super Administrator</option>
+                        <option value="admin">Administrator</option>
+                        <option value="guru">Guru</option>
+                        <option value="siswa">Siswa/Orang Tua</option>
+                    </select>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200">
+                    Masuk
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center text-sm text-gray-600">
+                <p>Demo Login:</p>
+                <p>Username: admin | Password: admin123 | Role: Administrator</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="hidden min-h-full">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="px-4 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-900">Sistem Point Siswa</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="userInfo" class="text-sm text-gray-600"></span>
+                    <button onclick="logout()" class="text-red-600 hover:text-red-800 text-sm font-medium">
+                        Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="bg-white border-b px-4 py-2">
+            <div class="flex space-x-1 overflow-x-auto" id="navigationMenu">
+                <!-- Navigation will be populated based on user role -->
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="p-4">
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="section">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Tahap Aman</p>
+                                <p class="text-2xl font-semibold text-gray-900" id="safeCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Tahap Peringatan</p>
+                                <p class="text-2xl font-semibold text-gray-900" id="warningCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Tahap Lanjut</p>
+                                <p class="text-2xl font-semibold text-gray-900" id="criticalCount">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-600">Total Siswa</p>
+                                <p class="text-2xl font-semibold text-gray-900" id="totalStudents">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">Siswa Perlu Perhatian</h3>
+                    </div>
+                    <div class="p-6">
+                        <div id="attentionList" class="space-y-3">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students Section -->
+            <div id="studentsSection" class="section hidden">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Data Siswa</h3>
+                            <button id="addStudentBtn" onclick="showAddStudentModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm hidden">
+                                Tambah Siswa
+                            </button>
+                        </div>
+                        <div class="flex space-x-4">
+                            <div>
+                                <label for="classFilter" class="block text-sm font-medium text-gray-700 mb-2">Filter Kelas</label>
+                                <select id="classFilter" onchange="filterStudentsByClass()" 
+                                        class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">Semua Kelas</option>
+                                    <option value="X-1">X-1</option>
+                                    <option value="X-2">X-2</option>
+                                    <option value="XI-1">XI-1</option>
+                                    <option value="XI-2">XI-2</option>
+                                    <option value="XII-1">XII-1</option>
+                                    <option value="XII-2">XII-2</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Point</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsTable" class="bg-white divide-y divide-gray-200">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Violations Section -->
+            <div id="violationsSection" class="section hidden">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">Riwayat Pelanggaran</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Siswa</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Pelanggaran</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Point</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="violationsTable" class="bg-white divide-y divide-gray-200">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Violation Section -->
+            <div id="addViolationSection" class="section hidden">
+                <div class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">Form Pemberian Point Pelanggaran</h3>
+                    </div>
+                    <div class="p-6">
+                        <form id="violationForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="studentSelect" class="block text-sm font-medium text-gray-700 mb-2">Pilih Siswa</label>
+                                    <select id="studentSelect" name="studentSelect" required 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Pilih Siswa</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="violationDate" class="block text-sm font-medium text-gray-700 mb-2">Tanggal Pelanggaran</label>
+                                    <input type="date" id="violationDate" name="violationDate" required 
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label for="violationType" class="block text-sm font-medium text-gray-700 mb-2">Tipe Pelanggaran</label>
+                                    <select id="violationType" name="violationType" required 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Pilih Tipe</option>
+                                        <option value="ringan">🟡 Ringan (2-6 point)</option>
+                                        <option value="sedang">🟠 Sedang (8-18 point)</option>
+                                        <option value="berat">🔴 Berat (20-50 point)</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="violationCategory" class="block text-sm font-medium text-gray-700 mb-2">Jenis Pelanggaran</label>
+                                    <select id="violationCategory" name="violationCategory" required 
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Pilih Jenis</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label for="violationPoints" class="block text-sm font-medium text-gray-700 mb-2">Point Pelanggaran</label>
+                                    <input type="number" id="violationPoints" name="violationPoints" required readonly
+                                           class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label for="violationDescription" class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                                    <textarea id="violationDescription" name="violationDescription" rows="3" 
+                                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                              placeholder="Keterangan tambahan..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="resetViolationForm()" 
+                                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    Reset
+                                </button>
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                    Simpan Pelanggaran
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BK Section -->
+            <div id="bkSection" class="section hidden">
+                <!-- BK Management (Super Admin & Admin only) -->
+                <div id="bkManagement" class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">Tindakan BK dan Kesiswaan</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-800 mb-4">Siswa Perlu Panggilan Orang Tua</h4>
+                                <div id="parentCallList" class="space-y-3">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-800 mb-4">Riwayat Tindakan</h4>
+                                <div id="actionHistory" class="space-y-3">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BK Submissions (Guru only) -->
+                <div id="bkSubmissions" class="bg-white rounded-lg shadow">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">Pengajuan ke BK/Kesiswaan</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-800 mb-4">Form Pengajuan</h4>
+                                <form id="bkSubmissionForm" class="space-y-4">
+                                    <div>
+                                        <label for="submissionStudent" class="block text-sm font-medium text-gray-700 mb-2">Pilih Siswa</label>
+                                        <select id="submissionStudent" name="submissionStudent" required 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Pilih Siswa</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="submissionType" class="block text-sm font-medium text-gray-700 mb-2">Jenis Pengajuan</label>
+                                        <select id="submissionType" name="submissionType" required 
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Pilih Jenis</option>
+                                            <option value="panggilan_ortu">Panggilan Orang Tua</option>
+                                            <option value="konseling">Konseling BK</option>
+                                            <option value="tindakan_khusus">Tindakan Khusus</option>
+                                            <option value="aduan_perilaku">Aduan Perilaku</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label for="submissionReason" class="block text-sm font-medium text-gray-700 mb-2">Alasan/Keterangan</label>
+                                        <textarea id="submissionReason" name="submissionReason" rows="4" required
+                                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                  placeholder="Jelaskan alasan pengajuan..."></textarea>
+                                    </div>
+                                    
+                                    <button type="submit" 
+                                            class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">
+                                        Ajukan ke BK
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div>
+                                <h4 class="text-md font-semibold text-gray-800 mb-4">Pengajuan Saya</h4>
+                                <div id="mySubmissions" class="space-y-3">
+                                    <!-- Will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full slide-up">
+            <div class="p-6 border-b">
+                <h3 class="text-lg font-semibold text-gray-900">Tambah Siswa Baru</h3>
+            </div>
+            <div class="p-6">
+                <form id="addStudentForm" class="space-y-4">
+                    <div>
+                        <label for="studentName" class="block text-sm font-medium text-gray-700 mb-2">Nama Siswa</label>
+                        <input type="text" id="studentName" name="studentName" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="studentAddress" class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                        <textarea id="studentAddress" name="studentAddress" rows="2" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label for="studentClass" class="block text-sm font-medium text-gray-700 mb-2">Kelas</label>
+                        <select id="studentClass" name="studentClass" required 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Pilih Kelas</option>
+                            <option value="X-1">X-1</option>
+                            <option value="X-2">X-2</option>
+                            <option value="XI-1">XI-1</option>
+                            <option value="XI-2">XI-2</option>
+                            <option value="XII-1">XII-1</option>
+                            <option value="XII-2">XII-2</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="homeRoomTeacher" class="block text-sm font-medium text-gray-700 mb-2">Wali Kelas</label>
+                        <input type="text" id="homeRoomTeacher" name="homeRoomTeacher" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="studentPhoto" class="block text-sm font-medium text-gray-700 mb-2">Foto Siswa (URL)</label>
+                        <input type="url" id="studentPhoto" name="studentPhoto" 
+                               placeholder="https://example.com/photo.jpg atau kosongkan untuk foto default"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <p class="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan foto avatar default</p>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" onclick="hideAddStudentModal()" 
+                                class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                            Batal
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let currentUser = null;
+        let students = [
+            {
+                id: 1,
+                name: "Ahmad Rizki Pratama",
+                address: "Jl. Merdeka No. 123, Jakarta Pusat",
+                class: "X-1",
+                homeRoomTeacher: "Ibu Sari Dewi",
+                totalPoints: 15,
+                violations: [],
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%234F46E5'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EAR%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 2,
+                name: "Siti Nurhaliza Putri",
+                address: "Jl. Sudirman No. 456, Jakarta Selatan",
+                class: "XI-2",
+                homeRoomTeacher: "Pak Budi Santoso",
+                totalPoints: 35,
+                violations: [],
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23EC4899'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3ESN%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 3,
+                name: "Budi Santoso Wijaya",
+                address: "Jl. Gatot Subroto No. 789, Jakarta Barat",
+                class: "XII-1",
+                homeRoomTeacher: "Ibu Dewi Sartika",
+                totalPoints: 65,
+                violations: [],
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2310B981'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EBS%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 4,
+                name: "Maya Sari Indah",
+                address: "Jl. Thamrin No. 321, Jakarta Pusat",
+                class: "X-2",
+                homeRoomTeacher: "Pak Ahmad Fauzi",
+                totalPoints: 8,
+                violations: [],
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23F59E0B'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EMS%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 5,
+                name: "Andi Kurniawan",
+                address: "Jl. Kuningan No. 654, Jakarta Selatan",
+                class: "XI-1",
+                homeRoomTeacher: "Ibu Rina Melati",
+                totalPoints: 42,
+                violations: [],
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%236366F1'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3EAK%3C/text%3E%3C/svg%3E"
+            }
+        ];
+
+        let violations = [
+            {
+                id: 1,
+                studentId: 1,
+                date: "2024-01-15",
+                type: "ringan",
+                category: "Terlambat masuk kelas (1-15 menit)",
+                points: 5,
+                description: "Terlambat 10 menit karena macet"
+            },
+            {
+                id: 2,
+                studentId: 2,
+                date: "2024-01-16",
+                type: "sedang",
+                category: "Tidak mengerjakan tugas di kelas",
+                points: 15,
+                description: "Tidak mengerjakan PR Matematika"
+            },
+            {
+                id: 3,
+                studentId: 3,
+                date: "2024-01-17",
+                type: "berat",
+                category: "Berkelahi dengan teman",
+                points: 25,
+                description: "Berkelahi dengan teman sekelas"
+            }
+        ];
+
+        let teachers = [
+            {
+                id: 1,
+                name: "Ibu Sari Dewi",
+                subject: "Matematika",
+                class: "X-1",
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23F59E0B'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3ESD%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 2,
+                name: "Pak Budi Santoso",
+                subject: "Bahasa Indonesia",
+                class: "XI-2",
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%236366F1'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3EBS%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 3,
+                name: "Ibu Dewi Sartika",
+                subject: "Fisika",
+                class: "XII-1",
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23EF4444'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3EDS%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 4,
+                name: "Pak Ahmad Fauzi",
+                subject: "Kimia",
+                class: "X-2",
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2310B981'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3EAF%3C/text%3E%3C/svg%3E"
+            },
+            {
+                id: 5,
+                name: "Ibu Rina Melati",
+                subject: "Biologi",
+                class: "XI-1",
+                photo: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%23EC4899'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='12' font-weight='bold'%3ERM%3C/text%3E%3C/svg%3E"
+            }
+        ];
+
+        const violationTypes = {
+            ringan: {
+                "Terlambat masuk kelas (1-15 menit)": 5,
+                "Tidak membawa buku pelajaran": 3,
+                "Seragam tidak lengkap/tidak rapi": 4,
+                "Tidak mengerjakan PR": 6,
+                "Tidak membawa alat tulis": 2,
+                "Rambut tidak sesuai aturan": 3,
+                "Sepatu tidak sesuai aturan": 3,
+                "Tidak memakai topi saat upacara": 2,
+                "Tidak memakai dasi/atribut seragam": 3,
+                "Kuku panjang/tidak bersih": 2
+            },
+            sedang: {
+                "Terlambat masuk kelas (>15 menit)": 10,
+                "Tidak mengerjakan tugas di kelas": 15,
+                "Keluar kelas tanpa izin": 12,
+                "Mengganggu teman saat belajar": 10,
+                "Tidak sopan kepada guru": 18,
+                "Tidur di kelas": 8,
+                "Main HP saat pelajaran": 15,
+                "Tidak mengikuti upacara": 12,
+                "Berbicara kotor/kasar": 14,
+                "Meninggalkan kelas saat jam pelajaran": 16,
+                "Tidak mengerjakan piket kelas": 8,
+                "Membuat keributan di kelas": 12,
+                "Mencontek saat ujian": 18,
+                "Tidak memakai masker (jika diwajibkan)": 10
+            },
+            berat: {
+                "Berkelahi dengan teman": 25,
+                "Merokok di lingkungan sekolah": 30,
+                "Membawa barang terlarang": 35,
+                "Membolos (tidak masuk tanpa keterangan)": 20,
+                "Melawan/tidak hormat kepada guru": 28,
+                "Merusak fasilitas sekolah": 25,
+                "Mencuri": 35,
+                "Membawa senjata tajam": 40,
+                "Narkoba": 50,
+                "Bullying/intimidasi": 30,
+                "Vandalisme (coret-coret dinding)": 22,
+                "Membawa rokok ke sekolah": 25,
+                "Keluar sekolah tanpa izin": 20,
+                "Memalsukan tanda tangan": 28,
+                "Mengancam teman/guru": 35
+            }
+        };
+
+        let bkActions = [];
+        let bkSubmissions = [];
+        let currentClassFilter = '';
+
+        // User permissions based on role
+        const permissions = {
+            super_admin: ['dashboard', 'students', 'violations', 'addViolation', 'bk'],
+            admin: ['dashboard', 'students', 'violations', 'addViolation', 'bk'],
+            guru: ['dashboard', 'students', 'violations', 'addViolation', 'bk'],
+            siswa: ['dashboard', 'violations']
+        };
+
+        // Authentication
+        function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            // Simple demo authentication
+            if (username && password && role) {
+                currentUser = {
+                    username: username,
+                    role: role,
+                    name: username.charAt(0).toUpperCase() + username.slice(1),
+                    class: role === 'guru' ? 'X-1' : null // Demo: assign class for teacher
+                };
+                
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('userInfo').textContent = `${currentUser.name} (${getRoleName(role)})`;
+                
+                setupNavigation();
+                initializeApp();
+                showNotification('Login berhasil! Selamat datang di Sistem Point Siswa.', 'success');
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginForm').reset();
+            showNotification('Anda telah keluar dari sistem.', 'info');
+        }
+
+        function getRoleName(role) {
+            const roleNames = {
+                'super_admin': 'Super Administrator',
+                'admin': 'Administrator',
+                'guru': 'Guru',
+                'siswa': 'Siswa/Orang Tua'
+            };
+            return roleNames[role] || role;
+        }
+
+        // Setup Navigation based on user role
+        function setupNavigation() {
+            const navigationMenu = document.getElementById('navigationMenu');
+            const userPermissions = permissions[currentUser.role] || [];
+            
+            const menuItems = {
+                dashboard: { name: 'Dashboard', icon: '📊' },
+                students: { name: 'Data Siswa', icon: '👥' },
+                violations: { name: 'Pelanggaran', icon: '📋' },
+                addViolation: { name: 'Tambah Point', icon: '➕' },
+                bk: { name: currentUser.role === 'guru' ? 'Pengajuan BK' : 'Tindakan BK', icon: '🏫' }
+            };
+            
+            navigationMenu.innerHTML = userPermissions.map(permission => `
+                <button onclick="showSection('${permission}')" 
+                        class="nav-btn px-4 py-2 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                        data-section="${permission}">
+                    ${menuItems[permission].name}
+                </button>
+            `).join('');
+            
+            // Set first item as active
+            if (userPermissions.length > 0) {
+                const firstBtn = navigationMenu.querySelector('.nav-btn');
+                if (firstBtn) {
+                    firstBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                    firstBtn.classList.add('bg-blue-100', 'text-blue-700');
+                }
+            }
+            
+            // Setup UI based on role
+            setupRoleBasedUI();
+        }
+
+        function setupRoleBasedUI() {
+            // Show/hide add student button based on role
+            const addStudentBtn = document.getElementById('addStudentBtn');
+            if (['super_admin', 'admin'].includes(currentUser.role)) {
+                addStudentBtn.classList.remove('hidden');
+            }
+            
+            // Setup class filter for teachers
+            if (currentUser.role === 'guru' && currentUser.class) {
+                const classFilter = document.getElementById('classFilter');
+                classFilter.value = currentUser.class;
+                currentClassFilter = currentUser.class;
+                classFilter.disabled = true; // Teachers can only see their class
+            }
+            
+            // Setup BK sections visibility
+            const bkManagement = document.getElementById('bkManagement');
+            const bkSubmissions = document.getElementById('bkSubmissions');
+            
+            if (['super_admin', 'admin'].includes(currentUser.role)) {
+                bkManagement.classList.remove('hidden');
+                bkSubmissions.classList.add('hidden');
+            } else if (currentUser.role === 'guru') {
+                bkManagement.classList.add('hidden');
+                bkSubmissions.classList.remove('hidden');
+            } else {
+                bkManagement.classList.add('hidden');
+                bkSubmissions.classList.add('hidden');
+            }
+        }
+
+        // Navigation
+        function showSection(sectionName) {
+            // Check permissions
+            const userPermissions = permissions[currentUser.role] || [];
+            if (!userPermissions.includes(sectionName)) {
+                showNotification('Anda tidak memiliki akses ke bagian ini', 'error');
+                return;
+            }
+            
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.remove('hidden');
+            
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-100', 'text-blue-700');
+                btn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            const activeBtn = document.querySelector(`[data-section="${sectionName}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                activeBtn.classList.add('bg-blue-100', 'text-blue-700');
+            }
+            
+            // Refresh data for the section
+            if (sectionName === 'dashboard') {
+                updateDashboard();
+            } else if (sectionName === 'students') {
+                updateStudentsTable();
+            } else if (sectionName === 'violations') {
+                updateViolationsTable();
+            } else if (sectionName === 'addViolation') {
+                updateStudentSelect();
+            } else if (sectionName === 'bk') {
+                updateBKSection();
+            }
+        }
+
+        // Filter students by class
+        function filterStudentsByClass() {
+            const classFilter = document.getElementById('classFilter');
+            currentClassFilter = classFilter.value;
+            updateStudentsTable();
+        }
+
+        function getFilteredStudents() {
+            let filteredStudents = students;
+            
+            // Apply class filter
+            if (currentClassFilter) {
+                filteredStudents = filteredStudents.filter(s => s.class === currentClassFilter);
+            }
+            
+            // For students/parents, only show their own data
+            if (currentUser.role === 'siswa') {
+                filteredStudents = filteredStudents.filter(s => s.name === currentUser.name);
+            }
+            
+            return filteredStudents;
+        }
+
+        // Dashboard Functions
+        function updateDashboard() {
+            const filteredStudents = getFilteredStudents();
+            
+            const safeCount = filteredStudents.filter(s => s.totalPoints < 25).length;
+            const warningCount = filteredStudents.filter(s => s.totalPoints >= 25 && s.totalPoints < 60).length;
+            const criticalCount = filteredStudents.filter(s => s.totalPoints >= 60).length;
+            
+            document.getElementById('safeCount').textContent = safeCount;
+            document.getElementById('warningCount').textContent = warningCount;
+            document.getElementById('criticalCount').textContent = criticalCount;
+            document.getElementById('totalStudents').textContent = filteredStudents.length;
+            
+            // Update attention list
+            const attentionList = document.getElementById('attentionList');
+            const needAttention = filteredStudents.filter(s => s.totalPoints >= 25).sort((a, b) => b.totalPoints - a.totalPoints);
+            
+            if (needAttention.length === 0) {
+                attentionList.innerHTML = '<p class="text-gray-500 text-center py-8">🎉 Tidak ada siswa yang perlu perhatian khusus. Semua siswa dalam kondisi baik!</p>';
+            } else {
+                attentionList.innerHTML = needAttention.map(student => `
+                    <div class="flex items-center justify-between p-4 border rounded-lg ${getStatusColor(student.totalPoints)} hover:shadow-md transition-shadow">
+                        <div class="flex items-center">
+                            <img src="${student.photo}" alt="${student.name}" class="w-12 h-12 rounded-full mr-4 border-2 border-white shadow-sm">
+                            <div>
+                                <p class="font-semibold text-gray-900">${student.name}</p>
+                                <p class="text-sm text-gray-600">
+                                    <span class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-2" 
+                                          style="background-color: ${getGradeColor(student.class)}; color: ${getGradeTextColor(student.class)};">
+                                        ${student.class}
+                                    </span>
+                                    ${student.totalPoints} point
+                                </p>
+                                <p class="text-xs text-gray-500">Wali: ${student.homeRoomTeacher}</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 text-sm font-medium rounded-full ${getStatusBadge(student.totalPoints)}">
+                            ${getStatusText(student.totalPoints)}
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function getStatusColor(points) {
+            if (points < 25) return 'border-green-200 bg-green-50';
+            if (points < 60) return 'border-yellow-200 bg-yellow-50';
+            return 'border-red-200 bg-red-50';
+        }
+
+        function getStatusBadge(points) {
+            if (points < 25) return 'bg-green-100 text-green-800';
+            if (points < 60) return 'bg-yellow-100 text-yellow-800';
+            return 'bg-red-100 text-red-800';
+        }
+
+        function getStatusText(points) {
+            if (points < 25) return 'Aman';
+            if (points < 60) return 'Peringatan';
+            return 'Lanjut';
+        }
+
+        // Students Functions
+        function updateStudentsTable() {
+            const tbody = document.getElementById('studentsTable');
+            const filteredStudents = getFilteredStudents();
+            
+            tbody.innerHTML = filteredStudents.map(student => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <img src="${student.photo}" alt="${student.name}" class="w-12 h-12 rounded-full mr-4 border-2 border-gray-200">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">${student.name}</div>
+                                <div class="text-sm text-gray-500">${student.address}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium">
+                            <span class="inline-block px-3 py-1 text-sm font-medium rounded-full" 
+                                  style="background-color: ${getGradeColor(student.class)}; color: ${getGradeTextColor(student.class)};">
+                                ${student.class}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-500 mt-1">Wali: ${student.homeRoomTeacher}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-bold text-gray-900">${student.totalPoints} point</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(student.totalPoints)}">
+                            ${getStatusText(student.totalPoints)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="viewStudentDetail(${student.id})" class="text-blue-600 hover:text-blue-900 mr-3 hover:underline">Detail</button>
+                        <button onclick="editStudent(${student.id})" class="text-green-600 hover:text-green-900 hover:underline">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showAddStudentModal() {
+            document.getElementById('addStudentModal').classList.remove('hidden');
+            document.getElementById('addStudentModal').classList.add('flex');
+        }
+
+        function hideAddStudentModal() {
+            document.getElementById('addStudentModal').classList.add('hidden');
+            document.getElementById('addStudentModal').classList.remove('flex');
+            document.getElementById('addStudentForm').reset();
+        }
+
+        function addStudent(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            // Generate default photo if none provided
+            const studentName = formData.get('studentName');
+            const initials = studentName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            const colors = ['%234F46E5', '%23EC4899', '%2310B981', '%23F59E0B', '%23EF4444', '%236366F1', '%238B5CF6', '%2306B6D4'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+            const defaultPhoto = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='${randomColor}'/%3E%3Ctext x='20' y='26' text-anchor='middle' fill='white' font-size='14' font-weight='bold'%3E${initials}%3C/text%3E%3C/svg%3E`;
+            
+            const newStudent = {
+                id: students.length + 1,
+                name: studentName,
+                address: formData.get('studentAddress'),
+                class: formData.get('studentClass'),
+                homeRoomTeacher: formData.get('homeRoomTeacher'),
+                totalPoints: 0,
+                violations: [],
+                photo: formData.get('studentPhoto') || defaultPhoto
+            };
+            
+            students.push(newStudent);
+            hideAddStudentModal();
+            updateStudentsTable();
+            updateDashboard();
+            
+            showNotification(`Siswa ${studentName} berhasil ditambahkan ke sistem!`, 'success');
+        }
+
+        // Violations Functions
+        function updateViolationsTable() {
+            const tbody = document.getElementById('violationsTable');
+            const violationHistory = violations.map(violation => {
+                const student = students.find(s => s.id === violation.studentId);
+                return {
+                    ...violation,
+                    studentName: student ? student.name : 'Unknown'
+                };
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = violationHistory.map(violation => `
+                <tr class="hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ${formatDate(violation.date)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${violation.studentName}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900 font-medium">${violation.category}</div>
+                        <div class="text-sm text-gray-500">
+                            ${violation.type === 'ringan' ? '🟡 Ringan' : violation.type === 'sedang' ? '🟠 Sedang' : '🔴 Berat'}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">
+                        +${violation.points}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-700">
+                        ${violation.description || '-'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStudentSelect() {
+            const select = document.getElementById('studentSelect');
+            const submissionSelect = document.getElementById('submissionStudent');
+            const filteredStudents = getFilteredStudents();
+            
+            const options = '<option value="">Pilih Siswa</option>' + 
+                filteredStudents.map(student => `
+                    <option value="${student.id}" style="background-color: ${getGradeColor(student.class)}20; color: #000000;">
+                        ${student.name} - ${student.class} (${student.totalPoints} point)
+                    </option>
+                `).join('');
+            
+            if (select) select.innerHTML = options;
+            if (submissionSelect) submissionSelect.innerHTML = options;
+        }
+
+        function updateViolationCategories() {
+            const typeSelect = document.getElementById('violationType');
+            const categorySelect = document.getElementById('violationCategory');
+            const pointsInput = document.getElementById('violationPoints');
+            
+            const selectedType = typeSelect.value;
+            
+            if (selectedType && violationTypes[selectedType]) {
+                const categories = violationTypes[selectedType];
+                categorySelect.innerHTML = '<option value="">Pilih Jenis</option>' +
+                    Object.keys(categories).map(category => `
+                        <option value="${category}">${category} (${categories[category]} point)</option>
+                    `).join('');
+                categorySelect.disabled = false;
+            } else {
+                categorySelect.innerHTML = '<option value="">Pilih Jenis</option>';
+                categorySelect.disabled = true;
+                pointsInput.value = '';
+            }
+        }
+
+        function updateViolationPoints() {
+            const typeSelect = document.getElementById('violationType');
+            const categorySelect = document.getElementById('violationCategory');
+            const pointsInput = document.getElementById('violationPoints');
+            
+            const selectedType = typeSelect.value;
+            const selectedCategory = categorySelect.value;
+            
+            if (selectedType && selectedCategory && violationTypes[selectedType][selectedCategory]) {
+                pointsInput.value = violationTypes[selectedType][selectedCategory];
+            } else {
+                pointsInput.value = '';
+            }
+        }
+
+        function addViolation(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            const studentId = parseInt(formData.get('studentSelect'));
+            const points = parseInt(formData.get('violationPoints'));
+            
+            const newViolation = {
+                id: violations.length + 1,
+                studentId: studentId,
+                date: formData.get('violationDate'),
+                type: formData.get('violationType'),
+                category: formData.get('violationCategory'),
+                points: points,
+                description: formData.get('violationDescription')
+            };
+            
+            violations.push(newViolation);
+            
+            // Update student's total points
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                student.totalPoints += points;
+                student.violations.push(newViolation.id);
+            }
+            
+            resetViolationForm();
+            showNotification(`Pelanggaran berhasil dicatat! ${student.name} mendapat +${points} point.`, 'success');
+            
+            // Check if BK action is needed
+            if (student && student.totalPoints >= 25) {
+                checkBKAction(student);
+            }
+        }
+
+        function resetViolationForm() {
+            document.getElementById('violationForm').reset();
+            document.getElementById('violationCategory').innerHTML = '<option value="">Pilih Jenis</option>';
+            document.getElementById('violationCategory').disabled = true;
+            document.getElementById('violationPoints').value = '';
+            // Reset date to today
+            document.getElementById('violationDate').value = new Date().toISOString().split('T')[0];
+        }
+
+        // BK Functions
+        function updateBKSection() {
+            if (['super_admin', 'admin'].includes(currentUser.role)) {
+                updateParentCallList();
+                updateActionHistory();
+            } else if (currentUser.role === 'guru') {
+                updateMySubmissions();
+                updateStudentSelect();
+            }
+        }
+
+        function submitToBK(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            const studentId = parseInt(formData.get('submissionStudent'));
+            const student = students.find(s => s.id === studentId);
+            
+            const submission = {
+                id: bkSubmissions.length + 1,
+                studentId: studentId,
+                studentName: student ? student.name : 'Unknown',
+                teacherName: currentUser.name,
+                type: formData.get('submissionType'),
+                reason: formData.get('submissionReason'),
+                date: new Date().toISOString().split('T')[0],
+                status: 'pending'
+            };
+            
+            bkSubmissions.push(submission);
+            
+            // Reset form
+            document.getElementById('bkSubmissionForm').reset();
+            
+            // Update display
+            updateMySubmissions();
+            
+            showNotification(`Pengajuan ${getSubmissionTypeName(submission.type)} untuk ${student.name} berhasil dikirim ke BK/Kesiswaan`, 'success');
+        }
+
+        function updateMySubmissions() {
+            const mySubmissions = document.getElementById('mySubmissions');
+            const teacherSubmissions = bkSubmissions.filter(s => s.teacherName === currentUser.name);
+            
+            if (teacherSubmissions.length === 0) {
+                mySubmissions.innerHTML = '<p class="text-gray-500 text-center py-4">Belum ada pengajuan yang dibuat</p>';
+            } else {
+                mySubmissions.innerHTML = teacherSubmissions.slice(-5).reverse().map(submission => `
+                    <div class="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="font-semibold text-sm">${submission.studentName}</p>
+                                <p class="text-sm text-gray-600">${getSubmissionTypeName(submission.type)}</p>
+                                <p class="text-xs text-gray-500">${formatDate(submission.date)}</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs rounded-full ${getSubmissionStatusBadge(submission.status)}">
+                                ${getSubmissionStatusText(submission.status)}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-700 bg-gray-50 p-2 rounded">${submission.reason}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function getSubmissionTypeName(type) {
+            const types = {
+                'panggilan_ortu': 'Panggilan Orang Tua',
+                'konseling': 'Konseling BK',
+                'tindakan_khusus': 'Tindakan Khusus',
+                'aduan_perilaku': 'Aduan Perilaku'
+            };
+            return types[type] || type;
+        }
+
+        function getSubmissionStatusBadge(status) {
+            const badges = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'approved': 'bg-green-100 text-green-800',
+                'rejected': 'bg-red-100 text-red-800'
+            };
+            return badges[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function getSubmissionStatusText(status) {
+            const texts = {
+                'pending': 'Menunggu',
+                'approved': 'Disetujui',
+                'rejected': 'Ditolak'
+            };
+            return texts[status] || status;
+        }
+
+        function updateParentCallList() {
+            const parentCallList = document.getElementById('parentCallList');
+            const needsCall = students.filter(s => s.totalPoints >= 25);
+            
+            if (needsCall.length === 0) {
+                parentCallList.innerHTML = '<p class="text-gray-500 text-center py-4">🎉 Tidak ada siswa yang perlu panggilan orang tua</p>';
+            } else {
+                parentCallList.innerHTML = needsCall.map(student => `
+                    <div class="border rounded-lg p-4 ${getStatusColor(student.totalPoints)} hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <img src="${student.photo}" alt="${student.name}" class="w-12 h-12 rounded-full mr-3 border-2 border-white shadow-sm">
+                                <div>
+                                    <h5 class="font-semibold">${student.name}</h5>
+                                    <p class="text-sm text-gray-600">
+                                        <span class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-2" 
+                                              style="background-color: ${getGradeColor(student.class)}; color: ${getGradeTextColor(student.class)};">
+                                            ${student.class}
+                                        </span>
+                                        ${student.totalPoints} point
+                                    </p>
+                                    <p class="text-xs text-gray-500">Wali: ${student.homeRoomTeacher}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-medium rounded-full ${getStatusBadge(student.totalPoints)}">
+                                ${getStatusText(student.totalPoints)}
+                            </span>
+                        </div>
+                        <button onclick="callParent(${student.id})" 
+                                class="w-full mt-2 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                            📞 Panggil Orang Tua
+                        </button>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateActionHistory() {
+            const actionHistory = document.getElementById('actionHistory');
+            
+            if (bkActions.length === 0) {
+                actionHistory.innerHTML = '<p class="text-gray-500 text-center py-4">Belum ada tindakan yang dilakukan</p>';
+            } else {
+                actionHistory.innerHTML = bkActions.slice(-10).reverse().map(action => `
+                    <div class="border rounded-lg p-3 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-semibold text-sm">📞 ${action.action}</p>
+                                <p class="text-sm text-gray-600">${action.studentName}</p>
+                                <p class="text-xs text-gray-500">${formatDate(action.date)}</p>
+                            </div>
+                            <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                ✅ Selesai
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function callParent(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                const action = {
+                    id: bkActions.length + 1,
+                    studentId: studentId,
+                    studentName: student.name,
+                    action: 'Panggilan Orang Tua',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'completed'
+                };
+                
+                bkActions.push(action);
+                updateActionHistory();
+                showNotification(`📞 Orang tua ${student.name} telah dipanggil untuk konsultasi terkait pelanggaran siswa.`, 'success');
+            }
+        }
+
+        function checkBKAction(student) {
+            if (student.totalPoints >= 60) {
+                showNotification(`⚠️ PERHATIAN: ${student.name} mencapai tahap lanjut (${student.totalPoints} point). Segera lakukan tindakan BK!`, 'warning');
+            } else if (student.totalPoints >= 25) {
+                showNotification(`⚠️ ${student.name} mencapai tahap peringatan (${student.totalPoints} point). Pertimbangkan panggilan orang tua.`, 'info');
+            }
+        }
+
+        // Utility Functions
+        function getGradeColor(className) {
+            if (className.startsWith('X')) return '#20B2AA'; // Kelas 10 - Light Sea Green
+            if (className.startsWith('XI')) return '#FFF380'; // Kelas 11 - Light Yellow
+            if (className.startsWith('XII')) return '#954535'; // Kelas 12 - Brown
+            return '#6B7280'; // Default gray
+        }
+
+        function getGradeTextColor(className) {
+            if (className.startsWith('X')) return '#FFFFFF'; // White text for dark background
+            if (className.startsWith('XI')) return '#000000'; // Black text for light background
+            if (className.startsWith('XII')) return '#FFFFFF'; // White text for dark background
+            return '#FFFFFF'; // Default white
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('id-ID', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <p class="text-sm pr-4">${message}</p>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-lg leading-none hover:opacity-70">&times;</button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideIn 0.3s ease-out reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function viewStudentDetail(studentId) {
+            const student = students.find(s => s.id === studentId);
+            if (student) {
+                const studentViolations = violations.filter(v => v.studentId === studentId);
+                let detailMessage = `📋 Detail Siswa: ${student.name}\n`;
+                detailMessage += `🏫 Kelas: ${student.class}\n`;
+                detailMessage += `👨‍🏫 Wali Kelas: ${student.homeRoomTeacher}\n`;
+                detailMessage += `📍 Alamat: ${student.address}\n`;
+                detailMessage += `⚠️ Total Point: ${student.totalPoints}\n`;
+                detailMessage += `📊 Status: ${getStatusText(student.totalPoints)}\n\n`;
+                
+                if (studentViolations.length > 0) {
+                    detailMessage += `📝 Riwayat Pelanggaran (${studentViolations.length}):\n`;
+                    studentViolations.forEach(v => {
+                        detailMessage += `• ${formatDate(v.date)}: ${v.category} (+${v.points} point)\n`;
+                    });
+                } else {
+                    detailMessage += `✅ Belum ada riwayat pelanggaran`;
+                }
+                
+                showNotification(detailMessage, 'info');
+            }
+        }
+
+        function editStudent(studentId) {
+            showNotification('🔧 Fitur edit siswa akan segera tersedia dalam update berikutnya', 'info');
+        }
+
+        function initializeApp() {
+            // Set today's date as default
+            document.getElementById('violationDate').value = new Date().toISOString().split('T')[0];
+            
+            // Initialize dashboard
+            updateDashboard();
+        }
+
+        // Event Listeners
+        document.getElementById('loginForm').addEventListener('submit', login);
+        document.getElementById('addStudentForm').addEventListener('submit', addStudent);
+        document.getElementById('violationForm').addEventListener('submit', addViolation);
+        document.getElementById('violationType').addEventListener('change', updateViolationCategories);
+        document.getElementById('violationCategory').addEventListener('change', updateViolationPoints);
+        
+        // Add BK submission form listener
+        document.getElementById('bkSubmissionForm').addEventListener('submit', submitToBK);
+
+        // Close modal when clicking outside
+        document.getElementById('addStudentModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideAddStudentModal();
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideAddStudentModal();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99040f5e719f81a4',t:'MTc2MDc0ODgyMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
